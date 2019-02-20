@@ -1,5 +1,5 @@
 @extends('layouts.main')
 
 @section('content')
-    <p>Form fields here!</p>
+    <h1>Enjoy the Demo!</h1>
 @endsection

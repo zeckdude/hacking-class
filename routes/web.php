@@ -22,9 +22,12 @@ Route::get('/sql-injection', function () {
 
 Route::post('/sql-injection', 'SqlInjectionController@findUsers');
 
-Route::get('/xss-attack', function () {
-    return view('xss-attack');
-});
+// Route::get('/xss-attack', function () {
+//     return view('xss-attack');
+// });
+
+Route::get('/xss-attack', 'XssAttackController@findUsers');
+Route::get('/hackers-site', 'XssAttackController@getCookie');
 
 Route::get('/file-upload', function () {
     return view('file-upload');

